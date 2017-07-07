@@ -30,6 +30,7 @@ function unpack_hexstr_to_decint($s){
 /**
    given a string, return an array containing the hexadecimal representation
    with one Byte per entry
+   $s must be 8 char long
  */
 function to_chunk($s){
     $step = 2;  //2 hexadecimal characters per Byte
@@ -134,7 +135,6 @@ $APP2_size_right = 96 + MARKER_SIZE;
 //// MP FORMAT IDENTIFIER (5.2.1)
 //A Null-Terminated Identifier in ASCII: MPF\0
 $MP_FORMAT_IDENTIFIER = pack("C*", 0x4D, 0x50, 0x46, 0x00);
-$MP_FORMAT_IDENTIFIER_SIZE = strlen($MP_FORMAT_IDENTIFIER);
 
 ////MP HEADER (5.2.2)
 //the MP HEADER is composed of the MP_ENDIAN and the OFFSET_TO_FIRST_IFD
@@ -170,7 +170,6 @@ $MPI_VERSION = pack("C*",
 
 
 //NUMBER OF IMAGES (5.2.3.2)
-$hex_number_of_images = sprintf('%x', $NUMBER_OF_IMAGES);
 $MPI_NUMBER_OF_IMAGES = pack("C*",
                              0x01,   //Tag
                              0xb0,
@@ -180,7 +179,7 @@ $MPI_NUMBER_OF_IMAGES = pack("C*",
                              0x00,
                              0x00,
                              0x00,
-                             $hex_number_of_images, //Number of images
+                             $NUMBER_OF_IMAGES, //Number of images
                              0x00,
                              0x00,
                              0x00);
@@ -213,9 +212,8 @@ $MPE_TAG = pack("C*",
 // Offset Details:
 // IFD of 16 Bytes per Image:  n * 16 = 32 Bytes. given n = 2 Images
 // + Offset of 50 Bytes
-// TOTAL of 82 Bytes <=> \0x52  TODO
+// TOTAL of 82 Bytes <=> \0x52
 $next_ifd_offset_value = 16 * $NUMBER_OF_IMAGES + $OFFSET_TO_MP_ENTRIES;
-$next_ifd_offset_value_hex = 0x52;//intval($next_ifd_offset_value, 16);
 $OFFSET_NEXT_IFD = pack("C*",
                         $next_ifd_offset_value,  //@0x4a
                         0x00,
@@ -229,22 +227,17 @@ $OFFSET_NEXT_IFD = pack("C*",
 // SIZE OF FILE 1 = original file size + APP2 size
 // FILE 2 TO ENDIANESS OFFSET = SIZE OF FILE 1 - OFFSET OF ENDIANESS TAG FROM SOI
 //the endianess tag follow the FID offset
-$ENDIANESS_TAG_OFFSET =
-    $APP2_POS_LEFT +
-    MARKER_SIZE +
-    $MP_FORMAT_IDENTIFIER_SIZE +
-    strlen($MP_ENDIAN) +
-    strlen($OFFSET_TO_FIRST_IFD);
-
+$OFFSET_ENDIANESS_TAG = $APP2_POS_LEFT + 1 +
+			strlen($MP_FORMAT_IDENTIFIER) +
+			strlen($MP_ENDIAN);
 
 //need the file size with the new APP2 segment size and some offsets
-$file_size_left_dec = $file_size_left + $APP2_size_left;
-$file_size_left_hex = sprintf('%08x', $file_size_left_dec);
+$file_size_left_with_APP2 = $file_size_left + $APP2_size_left;
+$file_size_left_hex = sprintf('%08x', $file_size_left_with_APP2);
 $file_size_right_hex = sprintf('%08x', $file_size_right + $APP2_size_right);
 $file_data_offset_hex = sprintf('%08x',
-                                $file_size_left_dec -
-                                $ENDIANESS_TAG_OFFSET);
-
+				$file_size_left_with_APP2 -
+                                $OFFSET_ENDIANESS_TAG);
 ////MPI VALUES
 $file_size_chunk = to_chunk($file_size_left_hex);
 
@@ -267,7 +260,7 @@ $MPI_VALUES = pack("C*",
                    0x00,            //Independent Image Entry Number 2
                    0x00);
 
-$file_size_chunk= array(0xe8, 0x28, 0x00, 0x00);//to_chunk($file_size_right_hex);
+$file_size_chunk= to_chunk($file_size_right_hex);
 $file_offset_chunk = array(0xbe, 0x28, 0x00, 0x00);//to_chunk($file_data_offset_hex);
 
 //Individual Image Attributes (5.2.3.3.1) (Figure 8)
