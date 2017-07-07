@@ -14,6 +14,7 @@ $filename_out = $options["o"];
 define("MARKER_APP0", chr(0xff).chr(0xe0));
 define("MARKER_APP1", chr(0xff).chr(0xe1));
 define("MARKER_APP2", chr(0xff).chr(0xe2));
+define("MARKER_SOS", chr(0xff).chr(0xda));
 define("MARKER_SIZE", 2);
 define("LEN_SIZE", 2);
 
@@ -48,27 +49,32 @@ function to_chunk($s){
  */
 function read_meta($img_data){
     $meta = array();
-    $APP0_pos = strpos($img_data, MARKER_APP0);
+
+    //get the meta part of the image (until Start Of Scan)
+    $SOS_pos = strpos($img_data, MARKER_SOS);
+    $img_data_header = substr($img_data, 0, $SOS_pos);
+
+    $APP0_pos = strpos($img_data_header, MARKER_APP0);
     if($APP0_pos){
         $pos = $APP0_pos;
-        $len_str = substr($img_data, $pos+MARKER_SIZE, LEN_SIZE);
+        $len_str = substr($img_data_header, $pos+MARKER_SIZE, LEN_SIZE);
         $len = unpack_hexstr_to_decint($len_str);
         $meta['APP0']['pos'] = $pos;
         $meta['APP0']['len'] = $len;
     }
-    $APP1_pos = strpos($img_data, MARKER_APP1, $pos);
+    $APP1_pos = strpos($img_data_header, MARKER_APP1, $pos);
     if($APP1_pos){
         $pos = $APP1_pos;
-        $len_str = substr($img_data, $pos+MARKER_SIZE, LEN_SIZE);
+        $len_str = substr($img_data_header, $pos+MARKER_SIZE, LEN_SIZE);
         $len = unpack_hexstr_to_decint($len_str);
         $meta['APP1']['pos'] = $pos;
         $meta['APP1']['len'] = $len;
     }
 
-    $APP2_pos = strpos($img_data, MARKER_APP2, $pos);
+    $APP2_pos = strpos($img_data_header, MARKER_APP2, $pos);
     if($APP2_pos){
         $pos = $APP2_pos;
-        $len_str = substr($img_data, $pos+MARKER_SIZE, LEN_SIZE);
+        $len_str = substr($img_data_header, $pos+MARKER_SIZE, LEN_SIZE);
         $len = unpack_hexstr_to_decint($len_str);
         $meta['APP2']['pos'] = $pos;
         $meta['APP2']['len'] = $len;
@@ -108,7 +114,7 @@ function set_APP2(&$img_data){
                 MARKER_SIZE;
         }
         else{
-            $APP2_POS = MARKER_SIZE;   //SOI marker size
+            $APP2_POS = MARKER_SIZE;   //after SOI marker
         }
     }
 
