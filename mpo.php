@@ -99,13 +99,13 @@ function set_APP2(&$img_data){
             $APP2_POS =
                 $meta['APP0']['pos'] +
                 $meta['APP0']['len'] +
-                1;
+                MARKER_SIZE;
         }
         else if(array_key_exists('APP1', $meta)){
             $APP2_POS =
                 $meta['APP1']['pos'] +
                 $meta['APP1']['len'] +
-                1;
+                MARKER_SIZE;
         }
         else{
             $APP2_POS = MARKER_SIZE;   //SOI marker size
@@ -227,7 +227,7 @@ $OFFSET_NEXT_IFD = pack("C*",
 // SIZE OF FILE 1 = original file size + APP2 size
 // FILE 2 TO ENDIANESS OFFSET = SIZE OF FILE 1 - OFFSET OF ENDIANESS TAG FROM SOI
 //the endianess tag follow the FID offset
-$OFFSET_ENDIANESS_TAG = $APP2_POS_LEFT + 1 +
+$OFFSET_ENDIANESS_TAG = $APP2_POS_LEFT +
 			strlen($MP_FORMAT_IDENTIFIER) +
 			strlen($MP_ENDIAN);
 
@@ -472,12 +472,12 @@ $segdata_right =
 //insert data in the APP2 segment
 $img_data_left = substr_replace($img_data_left,
                                 $segdata_left,
-                                $APP2_POS_LEFT + 1,
+                                $APP2_POS_LEFT,
                                 0);
 
 $img_data_right = substr_replace($img_data_right,
                                  $segdata_right,
-                                 $APP2_POS_RIGHT + 1,
+                                 $APP2_POS_RIGHT,
                                  0);
 
 //write mpo file
