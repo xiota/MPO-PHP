@@ -17,9 +17,34 @@ The adresses where the data will be written in the file created with the sample 
 
 # Usage
 
-This PHP script must be used with a Command Line Interface
+## Command line
 
- php mpo.pl -l left.jpg -r right.jpg -o out.MPO
+This PHP script can be used with a Command Line Interface
+
+ php cli.pl -l left.jpg -r right.jpg -o out.MPO
+
+## Web server
+It also can be used with a web server like this:
+
+ Assuming the requets has a file_left and a file_right parameters from a file input.
+
+```PHP
+<?php
+require($_SERVER['DOCUMENT_ROOT'].'mpo.php');
+try {
+    $filename_left = $_FILES['file_left']['tmp_name'];
+    $filename_right = $_FILES['file_right']['tmp_name'];
+    $img_data_left = file_get_contents($filename_left);
+    $img_data_right = file_get_contents($filename_right);
+    $filename_out = 'images/tmp/'.uniqid().'.MPO';
+    to_mpo($img_data_left, $img_data_right, $filename_out);
+    echo '{"response" : "ok", "outfile" : "'.$filename_out.'"}';
+
+} catch (Exception $e) {
+    $res = sprintf('{"response" : "error", "msg" : "%s"}', e->getMessage());
+}
+?>
+```
 
 * Command line arguments:
 
