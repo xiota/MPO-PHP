@@ -254,7 +254,7 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
                      0x00);
 
     $file_size_chunk= to_chunk($file_size_right_hex);
-    $file_offset_chunk = array(0xbe, 0x28, 0x00, 0x00);//to_chunk($file_data_offset_hex);
+    $file_offset_chunk = to_chunk($file_data_offset_hex);
 
     //Individual Image Attributes (5.2.3.3.1) (Figure 8)
     $MPI_VALUES_B = pack("C*",
