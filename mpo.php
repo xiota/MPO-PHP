@@ -1,9 +1,10 @@
 <?php
 //Constants
-define("MARKER_APP0", chr(0xff).chr(0xe0));
-define("MARKER_APP1", chr(0xff).chr(0xe1));
-define("MARKER_APP2", chr(0xff).chr(0xe2));
-define("MARKER_SOS", chr(0xff).chr(0xda));
+
+define("MARKER_APP0", pack("n", 0xffe0));
+define("MARKER_APP1", pack("n", 0xffe1));
+define("MARKER_APP2", pack("n", 0xffe2));
+define("MARKER_SOS",  pack("n", 0xffda));
 define("MARKER_SIZE", 2);
 define("LEN_SIZE", 2);
 
