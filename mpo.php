@@ -21,7 +21,7 @@ function unpack_hexstr_to_decint($s){
 /**
    given a string, return an array containing the hexadecimal representation
    with one Byte per entry
- */
+*/
 function to_chunk($s){
     $step = 2;  //2 hexadecimal characters per Byte
     $chunk= array();
@@ -35,7 +35,7 @@ function to_chunk($s){
 
 /**
    locate APP0 APP1 APP2 position and length
- */
+*/
 function read_meta($img_data){
     $meta = array();
 
@@ -73,11 +73,11 @@ function read_meta($img_data){
 
 /**
    search a suitable location for APP2, which is:
- * After APP1, if no APP1 found, after APP0 if no APP1 or APP0.
- * After SOI if no APP0 and no APP1.
- * If app2 is present, erase it, including APP marker
+   * After APP1, if no APP1 found, after APP0 if no APP1 or APP0.
+   * After SOI if no APP0 and no APP1.
+   * If app2 is present, erase it, including APP marker
    @return the position where APP2 should be created
- */
+*/
 function set_APP2(&$img_data){
     $meta = read_meta($img_data);
     $APP2_POS;
@@ -92,15 +92,15 @@ function set_APP2(&$img_data){
     else{
         if(array_key_exists('APP0', $meta)){
             $APP2_POS =
-                $meta['APP0']['pos'] +
-                $meta['APP0']['len'] +
-                MARKER_SIZE;
+                      $meta['APP0']['pos'] +
+                      $meta['APP0']['len'] +
+                      MARKER_SIZE;
         }
         else if(array_key_exists('APP1', $meta)){
             $APP2_POS =
-                $meta['APP1']['pos'] +
-                $meta['APP1']['len'] +
-                MARKER_SIZE;
+                      $meta['APP1']['pos'] +
+                      $meta['APP1']['len'] +
+                      MARKER_SIZE;
         }
         else{
             $APP2_POS = MARKER_SIZE;   //after SOI marker
@@ -152,44 +152,44 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
 
     //Version
     $MPI_VERSION = pack("C*",
-			0x00, //Tag
-			0xb0,
-			0x07, //Type (undefined)
-			0x00,
-			0x04, //Length of 4 ASCII CHARS
-			0x00,
-			0x00,
-			0x00,
-			0x30, //Version Number 0100 in ASCII
-			0x31,
-			0x30,
-			0x30);
+                        0x00, //Tag
+                        0xb0,
+                        0x07, //Type (undefined)
+                        0x00,
+                        0x04, //Length of 4 ASCII CHARS
+                        0x00,
+                        0x00,
+                        0x00,
+                        0x30, //Version Number 0100 in ASCII
+                        0x31,
+                        0x30,
+                        0x30);
 
 
     //NUMBER OF IMAGES (5.2.3.2)
     $MPI_NUMBER_OF_IMAGES = pack("C*",
-				 0x01,   //Tag
-				 0xb0,
-				 0x04,   //Type: Long
-				 0x00,
-				 0x01,   //Count
-				 0x00,
-				 0x00,
-				 0x00,
-				 $NUMBER_OF_IMAGES, //Number of images
-				 0x00,
-				 0x00,
-				 0x00);
+                                 0x01,   //Tag
+                                 0xb0,
+                                 0x04,   //Type: Long
+                                 0x00,
+                                 0x01,   //Count
+                                 0x00,
+                                 0x00,
+                                 0x00,
+                                 $NUMBER_OF_IMAGES, //Number of images
+                                 0x00,
+                                 0x00,
+                                 0x00);
 
     //OFFSET Of MP Entries values
     $OFFSET_TO_MP_ENTRIES =
-	strlen($MP_ENDIAN) +
-	strlen($OFFSET_TO_FIRST_IFD) +
-	strlen($MPI_COUNT) +
-	strlen($MPI_VERSION) +
-	strlen($MPI_NUMBER_OF_IMAGES) +
-	12 +        //MP ENTRY SIZE (declared after)
-	4;          //Offset of the next IFD (declared after)
+                          strlen($MP_ENDIAN) +
+                          strlen($OFFSET_TO_FIRST_IFD) +
+                          strlen($MPI_COUNT) +
+                          strlen($MPI_VERSION) +
+                          strlen($MPI_NUMBER_OF_IMAGES) +
+                          12 +        //MP ENTRY SIZE (declared after)
+                          4;          //Offset of the next IFD (declared after)
     $mpe_tag_count = 16 * $NUMBER_OF_IMAGES;
     $MPE_TAG = pack("C*",
                     0x02, //TAG
@@ -225,14 +225,13 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
     // FILE 2 TO ENDIANESS OFFSET = SIZE OF FILE 1 - OFFSET OF ENDIANESS TAG FROM SOI
     //the endianess tag follow the FID offset
     $OFFSET_ENDIANESS_TAG = $APP2_POS_LEFT +
-			    strlen($MP_FORMAT_IDENTIFIER) +
-			    strlen($MP_ENDIAN);
+                          strlen($MP_FORMAT_IDENTIFIER) +
+                          strlen($MP_ENDIAN);
 
     //need the file size with the new APP2 segment size and some offsets
     $file_size_left_with_APP2 = $file_size_left + $APP2_size_left;
-    $file_size_right_hex = sprintf('%08x', $file_size_right + $APP2_size_right);
     $file_data_offset_hex = sprintf('%08x',
-				    $file_size_left_with_APP2 -
+                                    $file_size_left_with_APP2 -
                                     $OFFSET_ENDIANESS_TAG);
     ////MPI VALUES
     //Individual Image Attributes (5.2.3.3.1) (Figure 8)
@@ -253,27 +252,24 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
                      0x00,                  //Independent Image Entry Number 2
                      0x00);
 
-    $file_size_chunk= to_chunk($file_size_right_hex);
     $file_offset_chunk = to_chunk($file_data_offset_hex);
 
     //Individual Image Attributes (5.2.3.3.1) (Figure 8)
     $MPI_VALUES_B = pack("C*",
-			 0x02,             //Type Code (24 bits) (Table 4) (MultiFrameDisparity)
-			 0x00,
-			 0x02,
-			 0b00000000,    //3bits:Image Date format, 2 bits:reserved, 3 bits:flags
-			 $file_size_chunk[0], //Individual Image Size (5,2,3,3,2) Big Endian @0x62
-			 $file_size_chunk[1],
-			 $file_size_chunk[2],
-			 $file_size_chunk[3],
-			 $file_offset_chunk[0],   //Individual Image Data Offset (5,2,3,3,3)
-			 $file_offset_chunk[1],
-			 $file_offset_chunk[2],
-			 $file_offset_chunk[3],
-			 0x00,                   //Independent Image Entry Number 1 (5,2,3,3,4)
-			 0x00,
-			 0x00,                   //Independent Image Entry Number 2
-			 0x00);
+                         0x02,             //Type Code (24 bits) (Table 4) (MultiFrameDisparity)
+                         0x00,
+                         0x02,
+                         0b00000000).    //3bits:Image Date format, 2 bits:reserved, 3 bits:flags
+                  pack("V", $file_size_right + $APP2_size_right). //Individual Image Size (5,2,3,3,2)  @0x62
+                  pack("C*",
+                       $file_offset_chunk[0],   //Individual Image Data Offset (5,2,3,3,3)
+                       $file_offset_chunk[1],
+                       $file_offset_chunk[2],
+                       $file_offset_chunk[3],
+                       0x00,                   //Independent Image Entry Number 1 (5,2,3,3,4)
+                       0x00,
+                       0x00,                   //Independent Image Entry Number 2
+                       0x00);
 
     ////////////////////////////////////////////////////////////////////////////////////
     //Start of MPAttributes IFD (5.2.4)
@@ -282,18 +278,18 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
 
     //MP Individual Image Number (5.2.4.2)
     $MPA_INDIVIDUAL_IMAGE_NUMBER = pack("C*",
-					0x01, //Tag
-					0xb1,
-					0x04, //Type
-					0x00,
-					0x01, //Count
-					0x00,
-					0x00,
-					0x00,
-					0x01, //Value
-					0x00,
-					0x00,
-					0x00);
+                                        0x01, //Tag
+                                        0xb1,
+                                        0x04, //Type
+                                        0x00,
+                                        0x01, //Count
+                                        0x00,
+                                        0x00,
+                                        0x00,
+                                        0x01, //Value
+                                        0x00,
+                                        0x00,
+                                        0x00);
 
     //BASE VIEWPOINT NUMBER (5.2.4.5)  @0x2918
     $MPA_BASE_VIEWPOINT_NUMBER = pack("C*",
@@ -312,39 +308,39 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
 
     //MPA Convergence Angle (5.2.4.6)
     $MPA_CONVERGENCE_ANGLE = pack("C*",
-				  0x05, //Tag
-				  0xb2,
-				  0x0a, //Type: SRATIONAL
-				  0x00,
-				  0x01, //Count
-				  0x00,
-				  0x00,
-				  0x00,
-				  0x88, //Offset Value
-				  0x00,
-				  0x00,
-				  0x00);
+                                  0x05, //Tag
+                                  0xb2,
+                                  0x0a, //Type: SRATIONAL
+                                  0x00,
+                                  0x01, //Count
+                                  0x00,
+                                  0x00,
+                                  0x00,
+                                  0x88, //Offset Value
+                                  0x00,
+                                  0x00,
+                                  0x00);
 
     //MP Baseline Length (5.2.4.7)
     $MPA_BASELINE_LENGTH = pack("C*",
-				0x06, //Tag
-				0xb2,
-				0x05, //Type: RATIONAL
-				0x00,
-				0x01, //Count
-				0x00,
-				0x00,
-				0x00,
-				0x90, //offset value
-				0x00,
-				0x00,
-				0x00);
+                                0x06, //Tag
+                                0xb2,
+                                0x05, //Type: RATIONAL
+                                0x00,
+                                0x01, //Count
+                                0x00,
+                                0x00,
+                                0x00,
+                                0x90, //offset value
+                                0x00,
+                                0x00,
+                                0x00);
 
     $OFFSET_NEXT_IFD_NULL = pack("C*",
-				 0x00,
-				 0x00,
-				 0x00,
-				 0x00);
+                                 0x00,
+                                 0x00,
+                                 0x00,
+                                 0x00);
 
     //convert the baseline value into hex and array of byte
     $baseline_length_hex = sprintf("%08x", $baseline_length);
@@ -380,18 +376,18 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
 
     //MP Individual Image Number (5.2.4.2)
     $MPA_INDIVIDUAL_IMAGE_NUMBER_B = pack("C*",
-					  0x01, //Tag
-					  0xb1,
-					  0x04, //Type
-					  0x00,
-					  0x01, //Count
-					  0x00,
-					  0x00,
-					  0x00,
-					  0x02, //VALUE
-					  0x00,
-					  0x00,
-					  0x00);
+                                          0x01, //Tag
+                                          0xb1,
+                                          0x04, //Type
+                                          0x00,
+                                          0x01, //Count
+                                          0x00,
+                                          0x00,
+                                          0x00,
+                                          0x02, //VALUE
+                                          0x00,
+                                          0x00,
+                                          0x00);
 
     //MPA Convergence Angle (5.2.4.6) @0x2924
     $MPA_CONVERGENCE_ANGLE_B = pack("C*",
@@ -410,56 +406,56 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
 
     //MP Baseline Length (5.2.4.7)
     $MPA_BASELINE_LENGTH_B = pack("C*",
-				  0x06, //Tag
-				  0xb2,
-				  0x05, //Type: RATIONAL
-				  0x00,
-				  0x01, //Count
-				  0x00,
-				  0x00,
-				  0x00,
-				  0x52, //offset value
-				  0x00,
-				  0x00,
-				  0x00);
+                                  0x06, //Tag
+                                  0xb2,
+                                  0x05, //Type: RATIONAL
+                                  0x00,
+                                  0x01, //Count
+                                  0x00,
+                                  0x00,
+                                  0x00,
+                                  0x52, //offset value
+                                  0x00,
+                                  0x00,
+                                  0x00);
 
     ////////////////////////////////////////////////////////////////////////////////
     //Insert binary data into the left image data in APP2
     $segdata_left =
-	MARKER_APP2.
-	chr(0x00).chr(0x9e).               //lenght of APP2
-	$MP_FORMAT_IDENTIFIER.
-	$MP_ENDIAN.
-	$OFFSET_TO_FIRST_IFD.
-	$MPI_COUNT.
-	$MPI_VERSION.
-	$MPI_NUMBER_OF_IMAGES.
-	$MPE_TAG.
-	$OFFSET_NEXT_IFD.
-	$MPI_VALUES.                       //one mpi value per image
-	$MPI_VALUES_B.
-	$MPA_COUNT.
-	$MPA_INDIVIDUAL_IMAGE_NUMBER.
-	$MPA_BASE_VIEWPOINT_NUMBER.
-	$MPA_CONVERGENCE_ANGLE.
-	$MPA_BASELINE_LENGTH.
-	$OFFSET_NEXT_IFD_NULL.
-	$MPA_VALUES;
+                  MARKER_APP2.
+                  chr(0x00).chr(0x9e).               //lenght of APP2
+                  $MP_FORMAT_IDENTIFIER.
+                  $MP_ENDIAN.
+                  $OFFSET_TO_FIRST_IFD.
+                  $MPI_COUNT.
+                  $MPI_VERSION.
+                  $MPI_NUMBER_OF_IMAGES.
+                  $MPE_TAG.
+                  $OFFSET_NEXT_IFD.
+                  $MPI_VALUES.                       //one mpi value per image
+                  $MPI_VALUES_B.
+                  $MPA_COUNT.
+                  $MPA_INDIVIDUAL_IMAGE_NUMBER.
+                  $MPA_BASE_VIEWPOINT_NUMBER.
+                  $MPA_CONVERGENCE_ANGLE.
+                  $MPA_BASELINE_LENGTH.
+                  $OFFSET_NEXT_IFD_NULL.
+                  $MPA_VALUES;
 
     $segdata_right =
-	MARKER_APP2.
-	chr(0x00).chr(0x60).  //lenght of APP2
-	$MP_FORMAT_IDENTIFIER.
-	$MP_ENDIAN.
-	$OFFSET_TO_FIRST_IFD.
-	$MPA_COUNT_B.
-	$MPI_VERSION.   //MPI version first picture = MPA version second picture
-	$MPA_INDIVIDUAL_IMAGE_NUMBER_B.
-	$MPA_BASE_VIEWPOINT_NUMBER.
-	$MPA_CONVERGENCE_ANGLE_B.
-	$MPA_BASELINE_LENGTH_B.
-	$OFFSET_NEXT_IFD_NULL.
-	$MPA_VALUES;
+                   MARKER_APP2.
+                   chr(0x00).chr(0x60).  //lenght of APP2
+                   $MP_FORMAT_IDENTIFIER.
+                   $MP_ENDIAN.
+                   $OFFSET_TO_FIRST_IFD.
+                   $MPA_COUNT_B.
+                   $MPI_VERSION.   //MPI version first picture = MPA version second picture
+                   $MPA_INDIVIDUAL_IMAGE_NUMBER_B.
+                   $MPA_BASE_VIEWPOINT_NUMBER.
+                   $MPA_CONVERGENCE_ANGLE_B.
+                   $MPA_BASELINE_LENGTH_B.
+                   $OFFSET_NEXT_IFD_NULL.
+                   $MPA_VALUES;
 
     //////////////////////////////////////////
     //insert data in the APP2 segment
