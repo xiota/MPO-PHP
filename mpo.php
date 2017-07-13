@@ -230,32 +230,28 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
 
     //need the file size with the new APP2 segment size and some offsets
     $file_size_left_with_APP2 = $file_size_left + $APP2_size_left;
-    $file_size_left_hex = sprintf('%08x', $file_size_left_with_APP2);
     $file_size_right_hex = sprintf('%08x', $file_size_right + $APP2_size_right);
     $file_data_offset_hex = sprintf('%08x',
 				    $file_size_left_with_APP2 -
                                     $OFFSET_ENDIANESS_TAG);
     ////MPI VALUES
-    $file_size_chunk = to_chunk($file_size_left_hex);
-
     //Individual Image Attributes (5.2.3.3.1) (Figure 8)
-    $MPI_VALUES = pack("C*",
-                       0x02,     //Type Code (24 bits) (Table 4) (MultiFrameDisparity) @0x4e
-                       0x00,
-                       0x02,
-                       0b10000000,    //3bits:Image Date format, 2 bits:reserved, 3 bits:flags
-                       $file_size_chunk[0], //Individual Image Size (5,2,3,3,2) Big Endian @0x52
-                       $file_size_chunk[1],
-                       $file_size_chunk[2],
-                       $file_size_chunk[3],
-                       0x00,            //Individual Image Data Offset (5,2,3,3,3) Must be NULL
-                       0x00,
-                       0x00,
-                       0x00,
-                       0x00,            //Independent Image Entry Number 1 (5,2,3,3,4)
-                       0x00,
-                       0x00,            //Independent Image Entry Number 2
-                       0x00);
+    $MPI_VALUES =
+                pack("C*",
+                     0x02,                  //Type Code (24 bits) (Table 4) (MultiFrameDisparity) @0x4e
+                     0x00,
+                     0x02,
+                     0b10000000).           //3bits:Image Date format, 2 bits:reserved, 3 bits:flags
+                pack("V", $file_size_left_with_APP2). //Individual Image Size (5,2,3,3,2)  @0x52
+                pack("C*",
+                     0x00,                  //Individual Image Data Offset (5,2,3,3,3) Must be NULL
+                     0x00,
+                     0x00,
+                     0x00,
+                     0x00,                  //Independent Image Entry Number 1 (5,2,3,3,4)
+                     0x00,
+                     0x00,                  //Independent Image Entry Number 2
+                     0x00);
 
     $file_size_chunk= to_chunk($file_size_right_hex);
     $file_offset_chunk = array(0xbe, 0x28, 0x00, 0x00);//to_chunk($file_data_offset_hex);
@@ -282,7 +278,7 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
     ////////////////////////////////////////////////////////////////////////////////////
     //Start of MPAttributes IFD (5.2.4)
     //count the number of fields to be declared
-    $MPA_COUNT = pack("C*", 0x04, 0x00);
+    $MPA_COUNT = pack("v", 4);
 
     //MP Individual Image Number (5.2.4.2)
     $MPA_INDIVIDUAL_IMAGE_NUMBER = pack("C*",
