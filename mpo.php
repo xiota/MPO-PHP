@@ -9,28 +9,9 @@ define("MARKER_SIZE", 2);
 define("LEN_SIZE", 2);
 
 //utils functions
-function unpack_hexstr($s){
-    return unpack('H*', $s)[1];
-}
-
 function unpack_hexstr_to_decint($s){
-    $s_hex = unpack_hexstr($s);
+    $s_hex = unpack('H*', $s)[1];
     return intval($s_hex, 16);
-}
-
-/**
-   given a string, return an array containing the hexadecimal representation
-   with one Byte per entry
-*/
-function to_chunk($s){
-    $step = 2;  //2 hexadecimal characters per Byte
-    $chunk= array();
-    for($i=$step; $i<=$step * (strlen($s) / 2); $i+=$step){
-        $chunk_str = substr($s, -$i, $step);
-        $chunk_hex = intval($chunk_str, 16);
-        array_push ($chunk, $chunk_hex);
-    }
-    return $chunk;
 }
 
 /**
@@ -230,18 +211,16 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
 
     //need the file size with the new APP2 segment size and some offsets
     $file_size_left_with_APP2 = $file_size_left + $APP2_size_left;
-    $file_data_offset_hex = sprintf('%08x',
-                                    $file_size_left_with_APP2 -
-                                    $OFFSET_ENDIANESS_TAG);
+
     ////MPI VALUES
     //Individual Image Attributes (5.2.3.3.1) (Figure 8)
     $MPI_VALUES =
                 pack("C*",
-                     0x02,                  //Type Code (24 bits) (Table 4) (MultiFrameDisparity) @0x4e
+                     0x02,                              //Type Code (24 bits) (Table 4) (MultiFrameDisparity) @0x4e
                      0x00,
                      0x02,
-                     0b10000000).           //3bits:Image Date format, 2 bits:reserved, 3 bits:flags
-                pack("V", $file_size_left_with_APP2). //Individual Image Size (5,2,3,3,2)  @0x52
+                     0b10000000).                       //3bits:Image Date format, 2 bits:reserved, 3 bits:flags
+                pack("V", $file_size_left_with_APP2).   //Individual Image Size (5,2,3,3,2)  @0x52
                 pack("C*",
                      0x00,                  //Individual Image Data Offset (5,2,3,3,3) Must be NULL
                      0x00,
@@ -252,8 +231,6 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
                      0x00,                  //Independent Image Entry Number 2
                      0x00);
 
-    $file_offset_chunk = to_chunk($file_data_offset_hex);
-
     //Individual Image Attributes (5.2.3.3.1) (Figure 8)
     $MPI_VALUES_B = pack("C*",
                          0x02,             //Type Code (24 bits) (Table 4) (MultiFrameDisparity)
@@ -261,14 +238,11 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
                          0x02,
                          0b00000000).    //3bits:Image Date format, 2 bits:reserved, 3 bits:flags
                   pack("V", $file_size_right + $APP2_size_right). //Individual Image Size (5,2,3,3,2)  @0x62
+                  pack("V", $file_size_left_with_APP2 - $OFFSET_ENDIANESS_TAG).//Individual Image Offset (5,2,3,3,3)
                   pack("C*",
-                       $file_offset_chunk[0],   //Individual Image Data Offset (5,2,3,3,3)
-                       $file_offset_chunk[1],
-                       $file_offset_chunk[2],
-                       $file_offset_chunk[3],
-                       0x00,                   //Independent Image Entry Number 1 (5,2,3,3,4)
+                       0x00,               //Independent Image Entry Number 1 (5,2,3,3,4)
                        0x00,
-                       0x00,                   //Independent Image Entry Number 2
+                       0x00,               //Independent Image Entry Number 2
                        0x00);
 
     ////////////////////////////////////////////////////////////////////////////////////
@@ -341,11 +315,6 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
                                  0x00,
                                  0x00,
                                  0x00);
-
-    //convert the baseline value into hex and array of byte
-    $baseline_length_hex = sprintf("%08x", $baseline_length);
-    $baseline_length_chunk = to_chunk($baseline_length_hex);
-
     //MP ATTRIBUT VALUES IFD
     $MPA_VALUES = pack("C*",
                        0x00,                       //Convergence angle (5,2,4,6)
@@ -355,15 +324,13 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
                        0x01,
                        0x00,
                        0x00,
-                       0x00,
-                       $baseline_length_chunk[0], //Baseline length (5,2,4,7)
-                       $baseline_length_chunk[1],
-                       $baseline_length_chunk[2],
-                       $baseline_length_chunk[3],
-                       0xe8,
-                       0x03,
-                       0x00,
-                       0x00);
+                       0x00).
+                pack("V", $baseline_length).   //Baseline length (5,2,4,7)
+                pack("C*",
+                     0xe8,
+                     0x03,
+                     0x00,
+                     0x00);
 
     ///////////////////////////////////////////////////////////////////////////////
     //data to be inserted in APP2 Segments of the right image
