@@ -62,14 +62,7 @@ No dependencies are required
 
 # Why in PHP language
 
-This script can be easly modified to be used online with a HTTP server to provide a service to upload two jpg files and
-download the generated MPO file.
-
-This script is a port of the Perl version I wroted two years prior.
-
-This port was pretty straitforward as those two langages have a lot in common.
-
-The main differance is that I used some jpeg metadata library for the Perl version, but in this version the needed data is written direclty into the files.
+This script be used online with a HTTP server to provide a service to upload two jpg files and download the generated MPO file.
 
 # Testing
 
