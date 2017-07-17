@@ -256,26 +256,24 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
     //data to be inserted in APP2 Segments of the right image
     //Only differant records from the first image record will be created.
     //We will be using the MPI version tag of the first image as the MPA version tag for the second image.
-
     $MPA_COUNT_B = pack("n", 0x0500);   //@0x28fe
 
     //MP Individual Image Number (5.2.4.2)
-    $MPA_INDIVIDUAL_IMAGE_NUMBER_B = pack("n",
-                                          0x01b1).      //Tag
+    $MPA_INDIVIDUAL_IMAGE_NUMBER_B = pack("n", 0x01b1). //Tag
 				     pack("v", 0x04).   //Type
-                                     pack("V", 1).
+                                     pack("V", 1).      //Count
                                      pack("V", 2);      //value
 
     //MPA Convergence Angle (5.2.4.6) @0x2924
     $MPA_CONVERGENCE_ANGLE_B = pack("n", 0x05b2). //Tag
 			       pack("v", 0x0a).   //Type: SRATIONAL
-			       pack("V", 0x01).   //Count
+			       pack("V", 1).      //Count
                                pack("V", 0x4a);   //Offset Value
 
     //MP Baseline Length (5.2.4.7)
     $MPA_BASELINE_LENGTH_B = pack("n", 0x06b2).  //Tag
 			     pack("v", 0x05).    //Type: RATIONAL
-			     pack("V", 0x01).    //Count
+			     pack("V", 1).       //Count
 			     pack("V",0x52);     //Offset value
 
     //////////////////////////// Insert binary data into the left image data in APP2
