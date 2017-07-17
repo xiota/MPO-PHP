@@ -115,37 +115,25 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
     $MP_ENDIAN = pack("N", 0x49492A00);
 
     ////////OFFSET_TO_FIRST_IFD (5.2.2.2)
-    //offset of the first IFD. It is at the next Byte (\0x08)
-    $OFFSET_TO_FIRST_IFD = pack("N", 0x08000000);
+    //offset of the first IFD. It is at the next Byte
+    $OFFSET_TO_FIRST_IFD = pack("V", 0x08);
 
     ////////////////////////////////////////////////////////////////////////////////
     ////MP INDEX IFD (5.2.3)
     //for the first individual image only. Each field is introduced by a tag.
     //count the number of fields to be declared (Version, Number Of Images, MP Entry)
-    $MPI_COUNT = pack("n", 0x0300);
+    $MPI_COUNT = pack("v", 3);
 
     //Version
-    $MPI_VERSION = pack("C*",
-                        0x00, //Tag
-                        0xb0,
-                        0x07, //Type (undefined)
-                        0x00,
-                        0x04, //Length of 4 ASCII CHARS
-                        0x00,
-                        0x00,
-                        0x00,
-                        0x30, //Version Number 0100 in ASCII
-                        0x31,
-                        0x30,
-                        0x30);
+    $MPI_VERSION = pack("n", 0x00b0).        //Tag
+		   pack("v", 0x07).          //Type (undefined)
+		   pack("V", 4).             //Length of 4 ASCII CHARS
+		   pack("N", 0x30313030);    //Version Number: `0100` in ASCII
 
     //NUMBER OF IMAGES (5.2.3.2)
-    $MPI_NUMBER_OF_IMAGES = pack("C*",
-                                 0x01,   //Tag
-                                 0xb0,
-                                 0x04,   //Type: Long
-                                 0x00).
-			    pack("V", 1).  //count
+    $MPI_NUMBER_OF_IMAGES = pack("n", 0x01b0).             //Tag
+			    pack("v", 0x04).               //Type: Long
+			    pack("V", 1).                  //count
                             pack("V", $NUMBER_OF_IMAGES);  //Value
 
     //OFFSET Of MP Entries values
@@ -158,11 +146,8 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
         12 +        //MP ENTRY SIZE (declared after)
         4;          //Offset of the next IFD (declared after)
     $mpe_tag_count = 16 * $NUMBER_OF_IMAGES;
-    $MPE_TAG = pack("C*",
-                    0x02, //TAG
-                    0xb0,
-                    0x07, //Type
-                    0x00).
+    $MPE_TAG = pack("n", 0x02b0).                 //TAG
+	       pack("v", 0x07).                   //Type (undefined)
                pack("V", $mpe_tag_count).
                pack("V", $OFFSET_TO_MP_ENTRIES);  // 0x46 Offset where are the MPEntries values
 
@@ -256,7 +241,7 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
 
     //MP ATTRIBUT VALUES IFD
     $MPA_VALUES = pack("C*",
-                       0x00,                       //Convergence angle (5,2,4,6)
+                       0x00,        //Convergence angle (5,2,4,6)
                        0x00,
                        0x00,
                        0x00,
@@ -282,16 +267,10 @@ function to_mpo($img_data_left, $img_data_right, $filename_out){
                                      pack("V", 2);      //value
 
     //MPA Convergence Angle (5.2.4.6) @0x2924
-    $MPA_CONVERGENCE_ANGLE_B = pack("C*",
-                                    0x05, //Tag
-                                    0xb2,
-                                    0x0a, //Type: SRATIONAL
-                                    0x00,
-                                    0x01, //Count
-                                    0x00,
-                                    0x00,
-                                    0x00)
-                              .pack("V", 0x4a);   //Offset Value
+    $MPA_CONVERGENCE_ANGLE_B = pack("n", 0x05b2). //Tag
+			       pack("v", 0x0a).   //Type: SRATIONAL
+			       pack("V", 0x01).   //Count
+                               pack("V", 0x4a);   //Offset Value
 
     //MP Baseline Length (5.2.4.7)
     $MPA_BASELINE_LENGTH_B = pack("n", 0x06b2).  //Tag
